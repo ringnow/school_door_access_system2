@@ -1,4 +1,4 @@
-from face_recognition import register_face, recognize_face
+from face_recognition import register_face, recognize_face_from_frame
 import tkinter as tk
 from tkinter import simpledialog
 
@@ -11,7 +11,14 @@ def student_register():
 
 def student_login():
     print("学生登录...")
-    recognize_face("students")
+    global cap
+    ret, frame = cap.read()
+    if ret:
+        user_id = recognize_face_from_frame(frame, "students")
+        if user_id:
+            print(f"学生 {user_id} 登录成功")
+        else:
+            print("未能识别学生")
 
 if __name__ == "__main__":
     root = tk.Tk()

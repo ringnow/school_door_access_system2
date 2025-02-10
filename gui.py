@@ -1,9 +1,9 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, simpledialog
 from student import student_register, student_login
-from admin import admin_login, manage_students, manage_visitors, admin_register
+from admin import admin_login, manage_students, manage_visitors, admin_register, manage_admins
 from visitor import register_visitor, visitor_login
-from face_recognition import recognize_face
+from face_recognition import recognize_face_from_frame
 import cv2
 from PIL import Image, ImageTk
 
@@ -18,37 +18,50 @@ root.geometry("800x600")  # 设置窗口大小为800x600
 
 # 初始化全局变量
 admin_logged_in = False
+is_initial_admin = False
 
 # 定义按钮点击事件
 def on_student_register():
     student_register()
 
 def on_student_login():
-    if recognize_face("students"):
-        messagebox.showinfo("登录成功", "学生登录成功")
-    else:
-        messagebox.showerror("登录失败", "未能识别学生")
+    global cap
+    ret, frame = cap.read()
+    if ret:
+        user_id = recognize_face_from_frame(frame, "students")
+        if user_id:
+            messagebox.showinfo("登录成功", "学生登录成功")
+        else:
+            messagebox.showerror("登录失败", "未能识别学生")
 
 def on_admin_register():
     admin_register()
 
 def on_admin_login():
-    global admin_logged_in
-    admin_id = admin_login()
-    if admin_id:
+    global admin_logged_in, is_initial_admin
+    username, is_initial = admin_login()
+    if username:
         admin_logged_in = True
-        btn_manage_students.grid(row=3, column=0, padx=20, pady=20)
-        btn_manage_visitors.grid(row=3, column=1, padx=20, pady=20)
-        btn_admin_register.grid(row=3, column=2, padx=20, pady=20)
-        btn_logout.grid(row=4, column=1, padx=20, pady=20)
+        is_initial_admin = is_initial
+        show_admin_buttons()
+
+def show_admin_buttons():
+    btn_manage_students.grid(row=3, column=0, padx=20, pady=20)
+    btn_manage_visitors.grid(row=3, column=1, padx=20, pady=20)
+    btn_admin_register.grid(row=3, column=2, padx=20, pady=20)
+    btn_logout.grid(row=4, column=1, padx=20, pady=20)
+    if is_initial_admin:
+        btn_manage_admins.grid(row=3, column=3, padx=20, pady=20)
 
 def on_logout():
-    global admin_logged_in
+    global admin_logged_in, is_initial_admin
     admin_logged_in = False
+    is_initial_admin = False
     btn_manage_students.grid_forget()
     btn_manage_visitors.grid_forget()
     btn_admin_register.grid_forget()
     btn_logout.grid_forget()
+    btn_manage_admins.grid_forget()
 
 def on_manage_students():
     manage_students(root)
@@ -57,13 +70,20 @@ def on_register_visitor():
     register_visitor()
 
 def on_visitor_login():
-    if recognize_face("visitors"):
-        messagebox.showinfo("登录成功", "访客登录成功")
-    else:
-        messagebox.showerror("登录失败", "未能识别访客")
+    global cap
+    ret, frame = cap.read()
+    if ret:
+        user_id = recognize_face_from_frame(frame, "visitors")
+        if user_id:
+            messagebox.showinfo("登录成功", "访客登录成功")
+        else:
+            messagebox.showerror("登录失败", "未能识别访客")
 
 def on_manage_visitors():
     manage_visitors(root)
+
+def on_manage_admins():
+    manage_admins(root)
 
 # 创建按钮并布局
 btn_student_register = tk.Button(root, text="学生注册", command=on_student_register, width=20, height=2)
@@ -85,6 +105,7 @@ btn_manage_students = tk.Button(root, text="管理学生信息", command=on_mana
 btn_manage_visitors = tk.Button(root, text="管理访客信息", command=on_manage_visitors, width=20, height=2)
 btn_admin_register = tk.Button(root, text="管理员注册", command=on_admin_register, width=20, height=2)
 btn_logout = tk.Button(root, text="退出登录", command=on_logout, width=20, height=2)
+btn_manage_admins = tk.Button(root, text="管理员信息管理", command=on_manage_admins, width=20, height=2)
 
 # 创建人脸识别窗口
 face_frame = tk.Frame(root, width=320, height=240)
@@ -93,6 +114,7 @@ face_label = tk.Label(face_frame)
 face_label.pack()
 
 def update_frame():
+    global cap
     ret, frame = cap.read()
     if ret:
         frame = cv2.resize(frame, (320, 240))

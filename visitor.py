@@ -1,5 +1,5 @@
 import sqlite3
-from face_recognition import register_face, recognize_face
+from face_recognition import register_face, recognize_face_from_frame
 import tkinter as tk
 from tkinter import simpledialog, messagebox
 
@@ -22,8 +22,11 @@ def register_visitor():
         messagebox.showinfo("成功", "访客注册成功！")
 
 def visitor_login():
-    visitor_id = recognize_face("visitors")
-    if visitor_id:
-        messagebox.showinfo("登录成功", f"欢迎, {visitor_id}!")
-    else:
-        messagebox.showerror("登录失败", "未能识别访客！")
+    global cap
+    ret, frame = cap.read()
+    if ret:
+        visitor_id = recognize_face_from_frame(frame, "visitors")
+        if visitor_id:
+            messagebox.showinfo("登录成功", f"欢迎, {visitor_id}!")
+        else:
+            messagebox.showerror("登录失败", "未能识别访客！")
