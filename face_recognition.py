@@ -9,7 +9,7 @@ sp = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 facerec = dlib.face_recognition_model_v1("dlib_face_recognition_resnet_model_v1.dat")
 
 def open_camera(camera_index=1):
-    cap = cv2.VideoCapture(camera_index)
+    cap = cv2.VideoCapture(camera_index, cv2.CAP_DSHOW)
     if not cap.isOpened():
         raise Exception(f"无法打开摄像头 (编号: {camera_index})")
     return cap
@@ -36,7 +36,7 @@ def recognize_face_from_frame(frame, table_name):
 
             conn = sqlite3.connect('school_door.db')
             cursor = conn.cursor()
-            cursor.execute(f"SELECT name, face_data FROM {table_name}")
+            cursor.execute(f"SELECT username, face_data FROM {table_name}")
             results = cursor.fetchall()
             conn.close()
 
@@ -95,7 +95,7 @@ def register_face(table_name, name, password=None):
                 cursor.execute("INSERT INTO administrators (username, password, face_data) VALUES (?, ?, ?)",
                                (name, password, face_data.tobytes()))
             else:
-                cursor.execute("INSERT INTO students (name, face_data) VALUES (?, ?)", (name, face_data.tobytes()))
+                cursor.execute("INSERT INTO students (username, face_data) VALUES (?, ?)", (name, face_data.tobytes()))
             conn.commit()
             conn.close()
             print(f"用户 {name} 注册成功！")
@@ -110,3 +110,6 @@ def register_face(table_name, name, password=None):
             break
 
     close_camera(cap)
+    if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) >= 1:
+        cv2.destroyWindow(window_name)
+    print("摄像头已关闭，窗口已销毁。")

@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 from student import student_register, student_login
-from admin import admin_login, manage_students, manage_visitors, admin_register, manage_admins
+from admin import admin_login, manage_students, manage_visitors, admin_register, manage_admins, initialize_admin
 from visitor import register_visitor, visitor_login
 from face_recognition import recognize_face_from_frame
 import cv2
@@ -11,12 +11,16 @@ from PIL import Image, ImageTk
 import locale
 locale.setlocale(locale.LC_ALL, '')
 
+# 初始化数据库和初始管理员
+initialize_admin()
+
 # 创建主窗口
 root = tk.Tk()
 root.title("学校门禁系统")
 root.geometry("800x600")  # 设置窗口大小为800x600
 
 # 初始化全局变量
+cap = None
 admin_logged_in = False
 is_initial_admin = False
 
@@ -26,6 +30,8 @@ def on_student_register():
 
 def on_student_login():
     global cap
+    if cap is None:
+        cap = cv2.VideoCapture(1)
     ret, frame = cap.read()
     if ret:
         user_id = recognize_face_from_frame(frame, "students")
@@ -71,6 +77,8 @@ def on_register_visitor():
 
 def on_visitor_login():
     global cap
+    if cap is None:
+        cap = cv2.VideoCapture(1)
     ret, frame = cap.read()
     if ret:
         user_id = recognize_face_from_frame(frame, "visitors")
@@ -115,6 +123,8 @@ face_label.pack()
 
 def update_frame():
     global cap
+    if cap is None:
+        cap = cv2.VideoCapture(1)
     ret, frame = cap.read()
     if ret:
         frame = cv2.resize(frame, (320, 240))
@@ -125,7 +135,6 @@ def update_frame():
         face_label.configure(image=imgtk)
     face_label.after(10, update_frame)
 
-cap = cv2.VideoCapture(1)
 update_frame()
 
 # 运行主循环
