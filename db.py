@@ -25,7 +25,8 @@ def init_db():
             id_number TEXT NOT NULL,
             phone TEXT NOT NULL,
             visit_time TEXT NOT NULL,
-            approved BOOLEAN DEFAULT 0
+            approved BOOLEAN DEFAULT 0,
+            face_data BLOB NOT NULL
         )
     ''')
     conn.commit()

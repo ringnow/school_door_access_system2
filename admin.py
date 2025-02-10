@@ -10,20 +10,23 @@ def initialize_admin():
     cursor = conn.cursor()
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS administrators (
-        username TEXT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
         password TEXT NOT NULL,
         face_data BLOB NOT NULL
     )
     """)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS students (
-        username TEXT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
         face_data BLOB NOT NULL
     )
     """)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS visitors (
-        username TEXT PRIMARY KEY,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
         face_data BLOB NOT NULL
     )
     """)

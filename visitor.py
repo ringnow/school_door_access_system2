@@ -16,7 +16,7 @@ def register_visitor():
 
         conn = sqlite3.connect('school_door.db')
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO visitors (name, id_number, phone, visit_time) VALUES (?, ?, ?, ?)", (name, id_number, phone, visit_time))
+        cursor.execute("INSERT INTO visitors (username, id_number, phone, visit_time) VALUES (?, ?, ?, ?)", (name, id_number, phone, visit_time))
         conn.commit()
         conn.close()
         messagebox.showinfo("成功", "访客注册成功！")

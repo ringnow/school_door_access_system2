@@ -47,7 +47,7 @@ def recognize_face_from_frame(frame, table_name):
                     return db_name
     return None
 
-def register_face(table_name, name, password=None):
+def register_face(table_name, username, password=None):
     print("开始人脸注册...")
     try:
         cap = open_camera()
@@ -93,12 +93,14 @@ def register_face(table_name, name, password=None):
 
             if table_name == "administrators":
                 cursor.execute("INSERT INTO administrators (username, password, face_data) VALUES (?, ?, ?)",
-                               (name, password, face_data.tobytes()))
-            else:
-                cursor.execute("INSERT INTO students (username, face_data) VALUES (?, ?)", (name, face_data.tobytes()))
+                               (username, password, face_data.tobytes()))
+            elif table_name == "students":
+                cursor.execute("INSERT INTO students (username, face_data) VALUES (?, ?)", (username, face_data.tobytes()))
+            elif table_name == "visitors":
+                cursor.execute("INSERT INTO visitors (username, face_data) VALUES (?, ?)", (username, face_data.tobytes()))
             conn.commit()
             conn.close()
-            print(f"用户 {name} 注册成功！")
+            print(f"用户 {username} 注册成功！")
             registered = True
             break
 
