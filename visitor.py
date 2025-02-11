@@ -1,7 +1,9 @@
 import sqlite3
-from face_recognition import register_face, recognize_face_from_frame
+from face_recognition import register_face, recognize_face_from_frame, open_camera
 import tkinter as tk
 from tkinter import simpledialog, messagebox
+
+cap = None
 
 def register_visitor():
     name = simpledialog.askstring("输入", "请输入访客姓名:")
@@ -16,6 +18,8 @@ def register_visitor():
 
 def visitor_login():
     global cap
+    if cap is None:
+        cap = open_camera()
     ret, frame = cap.read()
     if ret:
         visitor_id = recognize_face_from_frame(frame, "visitors")

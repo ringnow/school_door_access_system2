@@ -107,10 +107,12 @@ def admin_login():
 
 def admin_register():
     name = simpledialog.askstring("管理员注册", "请输入管理员用户名")
-    if not name:
-        messagebox.showerror("注册失败", "用户名不能为空")
+    password = simpledialog.askstring("管理员注册", "请输入管理员密码", show='*')
+    if not name or not password:
+        messagebox.showerror("注册失败", "用户名或密码不能为空")
         return
-    register_face("administrators", name)
+    register_face("administrators", name, password)
+
 
 def manage_students(root):
     new_window = Toplevel(root)
@@ -154,7 +156,7 @@ def manage_students(root):
         def capture_face():
             name = username_entry.get()
             if name:
-                register_face("students", name)
+                register_face("students", name, "")
                 refresh_students()
                 new_student_window.destroy()
             else:
