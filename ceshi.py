@@ -1,23 +1,24 @@
 import cv2
 
-cap = cv2.VideoCapture(1)
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+def open_camera():
+    cap = cv2.VideoCapture(1)  # 使用默认的相机索引
+    if not cap.isOpened():
+        raise Exception("无法打开摄像头")
+    return cap
 
+def close_camera(cap):
+    cap.release()
+    cv2.destroyAllWindows()
+
+cap = open_camera()
 while True:
     ret, frame = cap.read()
     if not ret:
-        print("Error: Can't receive frame (stream end?). Exiting ...")
+        print("Error: Could not read frame.")
         break
 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-
-    for (x, y, w, h) in faces:
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-    cv2.imshow('Face Detection', frame)
+    cv2.imshow('Camera Feed', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-cap.release()
-cv2.destroyAllWindows()
+close_camera(cap)

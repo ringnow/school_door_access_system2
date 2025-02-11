@@ -14,7 +14,6 @@ def init_db():
         CREATE TABLE IF NOT EXISTS administrators (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
-            password TEXT NOT NULL,
             face_data BLOB NOT NULL
         )
     ''')

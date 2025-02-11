@@ -12,14 +12,7 @@ def register_visitor():
     if name and id_number and phone and visit_time:
         # 进行人脸识别注册
         print("请面对摄像头进行注册...")
-        register_face("visitors", name)
-
-        conn = sqlite3.connect('school_door.db')
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO visitors (username, id_number, phone, visit_time) VALUES (?, ?, ?, ?)", (name, id_number, phone, visit_time))
-        conn.commit()
-        conn.close()
-        messagebox.showinfo("成功", "访客注册成功！")
+        register_face("visitors", name, id_number, phone, visit_time)
 
 def visitor_login():
     global cap
@@ -29,4 +22,4 @@ def visitor_login():
         if visitor_id:
             messagebox.showinfo("登录成功", f"欢迎, {visitor_id}!")
         else:
-            messagebox.showerror("登录失败", "未能识别访客！")
+            messagebox.showerror("登录失败", "未能识别访客!")

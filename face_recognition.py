@@ -8,24 +8,24 @@ detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 face_rec_model = dlib.face_recognition_model_v1("dlib_face_recognition_resnet_model_v1.dat")
 
-
 def open_camera():
-    cap = cv2.VideoCapture(1)  # 使用外接摄像头，编号为1
-    if not cap.isOpened():
+    cap = None
+    for backend in [cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_V4L2]:
+        cap = cv2.VideoCapture(1, backend)  # 使用默认摄像头，编号为0
+        if cap.isOpened():
+            break
+    if not cap or not cap.isOpened():
         raise Exception("无法打开摄像头")
     return cap
-
 
 def close_camera(cap):
     cap.release()
     cv2.destroyAllWindows()
 
-
 def process_frame(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = detector(gray)
     return frame, gray, faces
-
 
 def recognize_face_from_frame(frame, table):
     conn = sqlite3.connect('school_door_access_system.db')
@@ -51,8 +51,7 @@ def recognize_face_from_frame(frame, table):
             return row[0]
     return None
 
-
-def register_face(table, username, password, id_number=None, phone=None, visit_time=None):
+def register_face(table, username, id_number=None, phone=None, visit_time=None):
     cap = open_camera()
     window_name = "录入人脸"
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
@@ -78,8 +77,8 @@ def register_face(table, username, password, id_number=None, phone=None, visit_t
                     "INSERT INTO visitors (username, face_data, id_number, phone, visit_time) VALUES (?, ?, ?, ?, ?)",
                     (username, face_data.tobytes(), id_number, phone, visit_time))
             else:
-                cursor.execute(f"INSERT INTO {table} (username, password, face_data) VALUES (?, ?, ?)",
-                               (username, password, face_data.tobytes()))
+                cursor.execute(f"INSERT INTO {table} (username, face_data) VALUES (?, ?)",
+                               (username, face_data.tobytes()))
 
             conn.commit()
             conn.close()
@@ -94,4 +93,3 @@ def register_face(table, username, password, id_number=None, phone=None, visit_t
     if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) >= 1:
         cv2.destroyWindow(window_name)
     print("摄像头已关闭，窗口已销毁。")
-
