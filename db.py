@@ -1,12 +1,12 @@
 import sqlite3
 
 def init_db():
-    conn = sqlite3.connect('school_door.db')
+    conn = sqlite3.connect('school_door_access_system.db')
     cursor = conn.cursor()
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS students (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
+            username TEXT NOT NULL,
             face_data BLOB NOT NULL
         )
     ''')
@@ -21,7 +21,7 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS visitors (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
+            username TEXT NOT NULL,
             id_number TEXT NOT NULL,
             phone TEXT NOT NULL,
             visit_time TEXT NOT NULL,
