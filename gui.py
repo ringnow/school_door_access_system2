@@ -6,136 +6,265 @@ from visitor import register_visitor, visitor_login
 from face_recognition import recognize_face_from_frame
 import cv2
 from PIL import Image, ImageTk
-
-# 设置中文支持
 import locale
+
 locale.setlocale(locale.LC_ALL, '')
 
-# 初始化数据库和初始管理员
+# Initialize the database and initial administrator
 initialize_admin()
 
-# 创建主窗口
-root = tk.Tk()
-root.title("学校门禁系统")
-root.geometry("800x600")  # 设置窗口大小为800x600
-
-# 初始化全局变量
+# Global variables
 cap = None
 admin_logged_in = False
 is_initial_admin = False
 
-# 定义按钮点击事件
-def on_student_register():
-    student_register()
+# Button style dictionary (applied to most buttons)
+button_style = {
+    'bg': '#2980b9',
+    'fg': 'white',
+    'font': ('Helvetica', 12, 'bold'),
+    'width': 16,
+    'height': 2,
+    'relief': 'raised',
+    'bd': 2
+}
 
-def on_student_login():
-    global cap
-    if cap is None:
-        cap = cv2.VideoCapture(1)
-    ret, frame = cap.read()
-    if ret:
-        user_id = recognize_face_from_frame(frame, "students")
-        if user_id:
-            messagebox.showinfo("登录成功", "学生登录成功")
-        else:
-            messagebox.showerror("登录失败", "未能识别学生")
 
-def on_admin_register():
-    admin_register()
+def clear_frame(frame):
+    """Remove all widgets from the given frame."""
+    for widget in frame.winfo_children():
+        widget.destroy()
 
-def on_admin_login():
+
+def start_face_capture(parent):
+    """
+    Create the face recognition window inside the parent and start updating the frame.
+    Returns the frame that holds the face recognition window.
+    """
+    face_frame = tk.Frame(parent, width=320, height=240, bg='#34495e')
+    face_frame.grid(row=0, column=0, columnspan=3, pady=20)
+    face_frame.grid_propagate(False)
+    face_label = tk.Label(face_frame)
+    face_label.pack(expand=True)
+
+    def update_frame():
+        global cap
+        if cap is None:
+            cap = cv2.VideoCapture(1)
+        ret, frame_val = cap.read()
+        if ret:
+            frame_val = cv2.resize(frame_val, (320, 240))
+            cv2image = cv2.cvtColor(frame_val, cv2.COLOR_BGR2RGBA)
+            img = Image.fromarray(cv2image)
+            imgtk = ImageTk.PhotoImage(image=img)
+            face_label.imgtk = imgtk  # keep a reference
+            face_label.configure(image=imgtk)
+        face_label.after(10, update_frame)
+
+    update_frame()
+
+    return face_frame
+
+
+def show_main_menu():
+    """
+    Show the initial main menu with the three selection buttons.
+    """
+    clear_frame(main_frame)
+    # Create three buttons: "我是学生", "我是访客", "我是管理员"
+    btn_student = tk.Button(main_frame, text="我是学生", command=show_student_ui, **button_style)
+    btn_student.pack(pady=20)
+
+    btn_visitor = tk.Button(main_frame, text="我是访客", command=show_visitor_ui, **button_style)
+    btn_visitor.pack(pady=20)
+
+    btn_admin = tk.Button(main_frame, text="我是管理员", command=show_admin_ui, **button_style)
+    btn_admin.pack(pady=20)
+
+
+def show_student_ui():
+    """
+    When "我是学生" is clicked, show the student UI:
+    - Centered face recognition window
+    - Two buttons: "学生注册" and "学生登录"
+    - A back button to return to main menu.
+    """
+    clear_frame(main_frame)
+    # Use grid layout
+    face = start_face_capture(main_frame)
+    # Place the buttons frame underneath
+    btn_frame = tk.Frame(main_frame, bg='#2c3e50')
+    btn_frame.grid(row=1, column=0, pady=20)
+
+    btn_register = tk.Button(btn_frame, text="学生注册", command=on_student_register, **button_style)
+    btn_register.grid(row=0, column=0, padx=20)
+
+    btn_login = tk.Button(btn_frame, text="学生登录", command=on_student_login, **button_style)
+    btn_login.grid(row=0, column=1, padx=20)
+
+    back_btn = tk.Button(main_frame, text="返回主菜单", command=show_main_menu, **button_style)
+    back_btn.grid(row=2, column=0, pady=20)
+
+
+def show_visitor_ui():
+    """
+    When "我是访客" is clicked, show the visitor UI:
+    - Centered face recognition window
+    - Two buttons: "访客注册" and "访客登录"
+    - A back button to return to main menu.
+    """
+    clear_frame(main_frame)
+    face = start_face_capture(main_frame)
+    btn_frame = tk.Frame(main_frame, bg='#2c3e50')
+    btn_frame.grid(row=1, column=0, pady=20)
+
+    btn_register = tk.Button(btn_frame, text="访客注册", command=on_register_visitor, **button_style)
+    btn_register.grid(row=0, column=0, padx=20)
+
+    btn_login = tk.Button(btn_frame, text="访客登录", command=on_visitor_login, **button_style)
+    btn_login.grid(row=0, column=1, padx=20)
+
+    back_btn = tk.Button(main_frame, text="返回主菜单", command=show_main_menu, **button_style)
+    back_btn.grid(row=2, column=0, pady=20)
+
+
+def show_admin_ui():
+    """
+    When "我是管理员" is clicked, show the admin UI:
+    - Centered face recognition window
+    - A button "管理员登录" to perform admin login
+    - A back button to return to main menu.
+    """
+    clear_frame(main_frame)
+    face = start_face_capture(main_frame)
+    btn_frame = tk.Frame(main_frame, bg='#2c3e50')
+    btn_frame.grid(row=1, column=0, pady=20)
+
+    btn_admin_login = tk.Button(btn_frame, text="管理员登录", command=admin_login_handler, **button_style)
+    btn_admin_login.grid(row=0, column=0, padx=20)
+
+    back_btn = tk.Button(main_frame, text="返回主菜单", command=show_main_menu, **button_style)
+    back_btn.grid(row=2, column=0, pady=20)
+
+
+def admin_login_handler():
+    """
+    Handle administrator login. If successful, show the admin operation UI.
+    """
     global admin_logged_in, is_initial_admin
     username, is_initial = admin_login()
     if username:
         admin_logged_in = True
         is_initial_admin = is_initial
-        show_admin_buttons()
+        show_admin_buttons_ui()
+    else:
+        messagebox.showerror("错误", "管理员登录失败")
 
-def show_admin_buttons():
-    btn_manage_students.grid(row=3, column=0, padx=20, pady=20)
-    btn_manage_visitors.grid(row=3, column=1, padx=20, pady=20)
-    btn_admin_register.grid(row=3, column=2, padx=20, pady=20)
-    btn_logout.grid(row=4, column=1, padx=20, pady=20)
+
+def show_admin_buttons_ui():
+    """
+    After successful admin login, show the admin operations:
+    - Centered face recognition window
+    - Buttons: "学生信息管理", "访客信息管理", "管理员注册", "退出登录"
+      If the logged in admin is an initial administrator, also show "管理员信息管理".
+    - A back button to return to the main menu.
+    """
+    clear_frame(main_frame)
+    face = start_face_capture(main_frame)
+    btn_frame = tk.Frame(main_frame, bg='#2c3e50')
+    btn_frame.grid(row=1, column=0, pady=20)
+
+    btn_manage_students = tk.Button(btn_frame, text="学生信息管理", command=on_manage_students, **button_style)
+    btn_manage_students.grid(row=0, column=0, padx=10, pady=10)
+
+    btn_manage_visitors = tk.Button(btn_frame, text="访客信息管理", command=on_manage_visitors, **button_style)
+    btn_manage_visitors.grid(row=0, column=1, padx=10, pady=10)
+
+    btn_admin_register = tk.Button(btn_frame, text="管理员注册", command=on_admin_register, **button_style)
+    btn_admin_register.grid(row=0, column=2, padx=10, pady=10)
+
+    btn_logout = tk.Button(btn_frame, text="退出登录", command=on_logout_handler, **button_style)
+    btn_logout.grid(row=0, column=3, padx=10, pady=10)
+
     if is_initial_admin:
-        btn_manage_admins.grid(row=3, column=3, padx=20, pady=20)
+        btn_manage_admins = tk.Button(btn_frame, text="管理员信息管理", command=on_manage_admins, **button_style)
+        btn_manage_admins.grid(row=0, column=4, padx=10, pady=10)
 
-def on_logout():
+    back_btn = tk.Button(main_frame, text="返回主菜单", command=show_main_menu, **button_style)
+    back_btn.grid(row=2, column=0, pady=20)
+
+
+def on_logout_handler():
+    """
+    Handle logout and return to the main menu.
+    """
     global admin_logged_in, is_initial_admin
     admin_logged_in = False
     is_initial_admin = False
-    btn_manage_students.grid_forget()
-    btn_manage_visitors.grid_forget()
-    btn_admin_register.grid_forget()
-    btn_logout.grid_forget()
-    btn_manage_admins.grid_forget()
+    messagebox.showinfo("退出", "您已退出登录")
+    show_main_menu()
 
-def on_manage_students():
-    manage_students(root)
+
+def on_student_register():
+    student_register()
+
+
+def on_student_login():
+    global cap
+    if cap is None:
+        cap = cv2.VideoCapture(1)
+    ret, frame_val = cap.read()
+    if ret:
+        user_id = recognize_face_from_frame(frame_val, "students")
+        if user_id:
+            messagebox.showinfo("登录成功", "学生登录成功")
+        else:
+            messagebox.showerror("登录失败", "未能识别学生")
+
 
 def on_register_visitor():
     register_visitor()
+
 
 def on_visitor_login():
     global cap
     if cap is None:
         cap = cv2.VideoCapture(1)
-    ret, frame = cap.read()
+    ret, frame_val = cap.read()
     if ret:
-        user_id = recognize_face_from_frame(frame, "visitors")
+        user_id = recognize_face_from_frame(frame_val, "visitors")
         if user_id:
             messagebox.showinfo("登录成功", "访客登录成功")
         else:
             messagebox.showerror("登录失败", "未能识别访客")
 
+
+def on_manage_students():
+    manage_students(root)
+
+
 def on_manage_visitors():
     manage_visitors(root)
+
+
+def on_admin_register():
+    admin_register()
+
 
 def on_manage_admins():
     manage_admins(root)
 
-# 创建按钮并布局
-btn_student_register = tk.Button(root, text="学生注册", command=on_student_register, width=20, height=2)
-btn_student_register.grid(row=0, column=0, padx=20, pady=20)
 
-btn_student_login = tk.Button(root, text="学生登录", command=on_student_login, width=20, height=2)
-btn_student_login.grid(row=0, column=1, padx=20, pady=20)
+# Create main window and a main frame to hold UI content
+root = tk.Tk()
+root.title("学校门禁系统")
+root.geometry("800x600")
+root.configure(bg='#2c3e50')
 
-btn_admin_login = tk.Button(root, text="管理员登录", command=on_admin_login, width=20, height=2)
-btn_admin_login.grid(row=1, column=1, padx=20, pady=20)
+main_frame = tk.Frame(root, bg='#2c3e50')
+main_frame.pack(fill=tk.BOTH, expand=True)
 
-btn_visitor_login = tk.Button(root, text="访客登录", command=on_visitor_login, width=20, height=2)
-btn_visitor_login.grid(row=2, column=0, padx=20, pady=20)
+# Start with the main menu
+show_main_menu()
 
-btn_register_visitor = tk.Button(root, text="访客注册", command=on_register_visitor, width=20, height=2)
-btn_register_visitor.grid(row=2, column=1, padx=20, pady=20)
-
-btn_manage_students = tk.Button(root, text="管理学生信息", command=on_manage_students, width=20, height=2)
-btn_manage_visitors = tk.Button(root, text="管理访客信息", command=on_manage_visitors, width=20, height=2)
-btn_admin_register = tk.Button(root, text="管理员注册", command=on_admin_register, width=20, height=2)
-btn_logout = tk.Button(root, text="退出登录", command=on_logout, width=20, height=2)
-btn_manage_admins = tk.Button(root, text="管理员信息管理", command=on_manage_admins, width=20, height=2)
-
-# 创建人脸识别窗口
-face_frame = tk.Frame(root, width=320, height=240)
-face_frame.grid(row=0, column=2, rowspan=3, padx=20, pady=20)
-face_label = tk.Label(face_frame)
-face_label.pack()
-
-def update_frame():
-    global cap
-    if cap is None:
-        cap = cv2.VideoCapture(1)
-    ret, frame = cap.read()
-    if ret:
-        frame = cv2.resize(frame, (320, 240))
-        cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
-        img = Image.fromarray(cv2image)
-        imgtk = ImageTk.PhotoImage(image=img)
-        face_label.imgtk = imgtk
-        face_label.configure(image=imgtk)
-    face_label.after(10, update_frame)
-
-update_frame()
-
-# 运行主循环
 root.mainloop()
