@@ -6,6 +6,9 @@ from tkinter import simpledialog, messagebox
 cap = None
 
 def register_visitor():
+    """
+    访客注册功能，通过输入访客信息并录入人脸数据。
+    """
     name = simpledialog.askstring("输入", "请输入访客姓名:")
     id_number = simpledialog.askstring("输入", "请输入访客身份证号:")
     phone = simpledialog.askstring("输入", "请输入访客电话:")
@@ -17,6 +20,9 @@ def register_visitor():
         register_face("visitors", name, id_number, phone, visit_time)
 
 def visitor_login():
+    """
+    访客登录功能，通过摄像头捕捉人脸并识别。
+    """
     global cap
     if cap is None:
         cap = open_camera()
