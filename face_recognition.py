@@ -13,8 +13,12 @@ face_rec_model = dlib.face_recognition_model_v1("dlib_face_recognition_resnet_mo
 # 定义人脸匹配阈值（阈值越低要求匹配越严格）
 FACE_MATCH_THRESHOLD = 0.5
 
-
 def open_camera():
+    """
+    打开摄像头，尝试使用不同的后端API
+    Returns:
+        cap: 摄像头对象
+    """
     cap = None
     # 尝试使用不同的摄像头后端
     for backend in [cv2.CAP_DSHOW, cv2.CAP_MSMF, cv2.CAP_V4L2]:
@@ -25,19 +29,38 @@ def open_camera():
         raise Exception("无法打开摄像头")
     return cap
 
-
 def close_camera(cap):
+    """
+    关闭摄像头
+    Args:
+        cap: 摄像头对象
+    """
     cap.release()
     cv2.destroyAllWindows()
 
-
 def process_frame(frame):
+    """
+    处理视频帧，进行灰度转换和人脸检测
+    Args:
+        frame: 视频帧
+    Returns:
+        frame: 原始视频帧
+        gray: 灰度图像
+        faces: 检测到的人脸列表
+    """
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = detector(gray)
     return frame, gray, faces
 
-
 def recognize_face_from_frame(frame, table):
+    """
+    从视频帧中识别人脸，并在数据库中查找匹配的用户
+    Args:
+        frame: 视频帧
+        table: 数据库表名
+    Returns:
+        username: 匹配的用户名，如果没有匹配则返回None
+    """
     conn = sqlite3.connect('school_door_access_system.db', timeout=10)
     cursor = conn.cursor()
 
@@ -63,10 +86,14 @@ def recognize_face_from_frame(frame, table):
             return row[0]
     return None
 
-
 def is_face_registered(face_descriptor, table):
     """
     判断给定的人脸描述是否已在指定表中注册
+    Args:
+        face_descriptor: 人脸描述向量
+        table: 数据库表名
+    Returns:
+        bool: 是否已注册
     """
     conn = sqlite3.connect('school_door_access_system.db', timeout=10)
     cursor = conn.cursor()
@@ -83,7 +110,6 @@ def is_face_registered(face_descriptor, table):
             return True
     return False
 
-
 def register_face(table, username, password="", id_number=None, phone=None, visit_time=None):
     """
     注册人脸：
@@ -93,6 +119,13 @@ def register_face(table, username, password="", id_number=None, phone=None, visi
       插入数据时使用 (username, face_data, id_number, phone, visit_time)
     - 对于其他表，调用时传入: register_face(table, username)
       插入数据时使用 (username, face_data)
+    Args:
+        table: 数据库表名
+        username: 用户名
+        password: 密码（可选）
+        id_number: 身份证号（可选）
+        phone: 电话号码（可选）
+        visit_time: 访问时间（可选）
     """
     cap = open_camera()
     window_name = "录入人脸"

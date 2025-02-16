@@ -6,6 +6,9 @@ from face_recognition import open_camera, close_camera, process_frame, recognize
 from tkinter import simpledialog, messagebox, Toplevel, Label, Button, Entry, Frame
 
 def initialize_admin():
+    """
+    初始化数据库并创建表格（管理员、学生和访客）。如果没有初始管理员账户，则创建一个默认的初始管理员账户。
+    """
     conn = sqlite3.connect('school_door_access_system.db')
     cursor = conn.cursor()
     cursor.execute("""
@@ -43,6 +46,12 @@ def initialize_admin():
     conn.close()
 
 def admin_login():
+    """
+    管理员登录功能。首先通过用户名和密码验证管理员账户。对于其他管理员账户，还需通过人脸识别进行验证。
+    Returns:
+        username: 登录成功的用户名
+        is_initial: 是否为初始管理员
+    """
     print("管理员登录...")
     username = simpledialog.askstring("管理员登录", "请输入用户名")
     password = simpledialog.askstring("管理员登录", "请输入密码", show='*')
@@ -106,6 +115,9 @@ def admin_login():
     return None, False
 
 def admin_register():
+    """
+    管理员注册功能。通过输入用户名和密码，并调用register_face函数录入人脸数据，将新管理员信息存入数据库。
+    """
     name = simpledialog.askstring("管理员注册", "请输入管理员用户名")
     password = simpledialog.askstring("管理员注册", "请输入管理员密码", show='*')
     if not name or not password:
@@ -113,8 +125,12 @@ def admin_register():
         return
     register_face("administrators", name, password)
 
-
 def manage_students(root):
+    """
+    管理学生信息的功能，包括添加学生、删除学生、修改学生信息和查找学生信息。通过界面上的按钮触发相应的操作。
+    Args:
+        root: 主窗口
+    """
     new_window = Toplevel(root)
     new_window.title("管理学生信息")
     new_window.geometry("400x400")
@@ -215,6 +231,11 @@ def manage_students(root):
     refresh_students()
 
 def manage_visitors(root):
+    """
+    管理访客信息的功能，包括添加访客、删除访客、修改访客信息和查找访客信息。通过界面上的按钮触发相应的操作。
+    Args:
+        root: 主窗口
+    """
     new_window = Toplevel(root)
     new_window.title("管理访客信息")
     new_window.geometry("400x400")
@@ -343,6 +364,11 @@ def manage_visitors(root):
     refresh_visitors()
 
 def manage_admins(root):
+    """
+    管理管理员信息的功能，包括添加管理员、删除管理员、修改管理员信息和查找管理员信息。通过界面上的按钮触发相应的操作。
+    Args:
+        root: 主窗口
+    """
     new_window = Toplevel(root)
     new_window.title("管理管理员信息")
     new_window.geometry("400x400")

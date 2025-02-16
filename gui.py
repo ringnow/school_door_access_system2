@@ -29,17 +29,22 @@ button_style = {
     'bd': 2
 }
 
-
 def clear_frame(frame):
-    """清空 frame 中所有的组件"""
+    """
+    清空 frame 中所有的组件
+    Args:
+        frame: tkinter Frame 对象
+    """
     for widget in frame.winfo_children():
         widget.destroy()
-
 
 def start_face_capture(parent):
     """
     在parent中创建人脸识别窗口，并启动实时更新。
-    返回包含人脸识别窗口的 frame。
+    Args:
+        parent: 父窗口
+    Returns:
+        face_frame: 包含人脸识别窗口的 Frame 对象
     """
     face_frame = tk.Frame(parent, width=320, height=240, bg='#34495e')
     face_frame.grid_propagate(False)  # 固定大小，不随子组件大小变化
@@ -63,7 +68,6 @@ def start_face_capture(parent):
     update_frame()
     return face_frame
 
-
 def show_main_menu():
     """
     显示初始主菜单，包含三个选择按钮
@@ -81,7 +85,6 @@ def show_main_menu():
 
     btn_admin = tk.Button(main_frame, text="我是管理员", command=show_admin_ui, **button_style)
     btn_admin.grid(row=2, column=0, pady=10)
-
 
 def show_student_ui():
     """
@@ -108,7 +111,6 @@ def show_student_ui():
     back_btn = tk.Button(main_frame, text="返回主菜单", command=show_main_menu, **button_style)
     back_btn.grid(row=2, column=0, pady=20)
 
-
 def show_visitor_ui():
     """
     “我是访客”点击后显示访客界面：
@@ -131,7 +133,6 @@ def show_visitor_ui():
     back_btn = tk.Button(main_frame, text="返回主菜单", command=show_main_menu, **button_style)
     back_btn.grid(row=2, column=0, pady=20)
 
-
 def show_admin_ui():
     """
     “我是管理员”点击后显示管理员界面：
@@ -152,7 +153,6 @@ def show_admin_ui():
     back_btn = tk.Button(main_frame, text="返回主菜单", command=show_main_menu, **button_style)
     back_btn.grid(row=2, column=0, pady=20)
 
-
 def admin_login_handler():
     """
     处理管理员登录，若登录成功则显示管理员操作界面
@@ -165,7 +165,6 @@ def admin_login_handler():
         show_admin_buttons_ui()
     else:
         messagebox.showerror("错误", "管理员登录失败")
-
 
 def show_admin_buttons_ui():
     """
@@ -198,7 +197,6 @@ def show_admin_buttons_ui():
     back_btn = tk.Button(main_frame, text="返回主菜单", command=show_main_menu, **button_style)
     back_btn.grid(row=2, column=0, pady=20)
 
-
 def on_logout_handler():
     """
     处理退出登录，并返回主界面
@@ -209,10 +207,8 @@ def on_logout_handler():
     messagebox.showinfo("退出", "您已退出登录")
     show_main_menu()
 
-
 def on_student_register():
     student_register()
-
 
 def on_student_login():
     global cap
@@ -226,10 +222,8 @@ def on_student_login():
         else:
             messagebox.showerror("登录失败", "未能识别学生")
 
-
 def on_register_visitor():
     register_visitor()
-
 
 def on_visitor_login():
     global cap
@@ -239,26 +233,21 @@ def on_visitor_login():
     if ret:
         user_id = recognize_face_from_frame(frame_val, "visitors")
         if user_id:
-            messagebox.showinfo("登录成功", "访客登录成功")
+            messagebox.showinfo("登录成功", f"欢迎, {user_id}!")
         else:
             messagebox.showerror("登录失败", "未能识别访客")
-
 
 def on_manage_students():
     manage_students(root)
 
-
 def on_manage_visitors():
     manage_visitors(root)
-
 
 def on_admin_register():
     admin_register()
 
-
 def on_manage_admins():
     manage_admins(root)
-
 
 # 主窗口设置，使用 grid 布局保证 main_frame 充满整个窗口
 root = tk.Tk()
