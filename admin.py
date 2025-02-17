@@ -281,11 +281,21 @@ def manage_visitors(root):
             Label(visitor_frame, text=info_text).pack(side="left")
             Button(visitor_frame, text="删除", command=lambda v=visitor[1]: delete_visitor(v)).pack(side="right")
             Button(visitor_frame, text="修改", command=lambda v=visitor[1]: update_visitor(v)).pack(side="right")
+            if visitor[6] == 0:  # 如果未批准，显示批准按钮
+                Button(visitor_frame, text="批准", command=lambda v=visitor[1]: approve_visitor(v)).pack(side="right")
 
     def delete_visitor(username):
         conn = sqlite3.connect('school_door_access_system.db')
         cursor = conn.cursor()
         cursor.execute("DELETE FROM visitors WHERE username=?", (username,))
+        conn.commit()
+        conn.close()
+        refresh_visitors()
+
+    def approve_visitor(username):
+        conn = sqlite3.connect('school_door_access_system.db')
+        cursor = conn.cursor()
+        cursor.execute("UPDATE visitors SET approved=1 WHERE username=?", (username,))
         conn.commit()
         conn.close()
         refresh_visitors()

@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import messagebox
 from student import student_register, student_login
 from admin import admin_login, manage_students, manage_visitors, admin_register, manage_admins, initialize_admin
 from visitor import register_visitor, visitor_login
@@ -125,9 +125,9 @@ def show_visitor_ui():
 
     btn_frame = tk.Frame(main_frame, bg='#2c3e50')
     btn_frame.grid(row=1, column=0, pady=10)
-    btn_register = tk.Button(btn_frame, text="访客注册", command=on_register_visitor, **button_style)
+    btn_register = tk.Button(btn_frame, text="访客注册", command=lambda: register_visitor(root), **button_style)
     btn_register.grid(row=0, column=0, padx=20)
-    btn_login = tk.Button(btn_frame, text="访客登录", command=on_visitor_login, **button_style)
+    btn_login = tk.Button(btn_frame, text="访客登录", command=lambda: visitor_login(root), **button_style)
     btn_login.grid(row=0, column=1, padx=20)
 
     back_btn = tk.Button(main_frame, text="返回主菜单", command=show_main_menu, **button_style)
@@ -223,7 +223,7 @@ def on_student_login():
             messagebox.showerror("登录失败", "未能识别学生")
 
 def on_register_visitor():
-    register_visitor()
+    register_visitor(root)
 
 def on_visitor_login():
     global cap
