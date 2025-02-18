@@ -49,7 +49,7 @@ def capture_face():
             cv2.rectangle(frame, (faces[0].left(), faces[0].top()), (faces[0].right(), faces[0].bottom()), (0, 255, 0), 2)
 
         cv2.imshow(window_name, frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(1) & 0xFF == ord('q') or face_descriptor is not None:
             break
 
     close_camera(cap)
@@ -132,6 +132,11 @@ def register_visitor(root):
         try:
             conn = sqlite3.connect('school_door_access_system.db')
             cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM visitors WHERE username=? OR id_number=?", (username, id_number))
+            if cursor.fetchone()[0] > 0:
+                messagebox.showerror("注册失败", "该访客已注册")
+                return
+
             cursor.execute("""
                 INSERT INTO visitors (username, id_number, phone, entry_time, exit_time, visit_time, face_data, approved)
                 VALUES (?, ?, ?, ?, ?, ?, ?, 0)
@@ -149,52 +154,45 @@ def register_visitor(root):
     save_button.grid(row=7, column=1, padx=10, pady=10)
 
 def visitor_login(root):
-    login_window = tk.Toplevel(root)
-    login_window.title("访客登录")
+    cap = open_camera()
+    ret, frame = cap.read()
+    close_camera(cap)
+    if not ret:
+        messagebox.showerror("登录失败", "无法接收图像流")
+        return
 
-    def check_login():
-        cap = open_camera()
-        ret, frame = cap.read()
-        close_camera(cap)
-        if not ret:
-            messagebox.showerror("登录失败", "无法接收图像流")
-            return
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    faces = detector(gray)
+    if not faces:
+        messagebox.showerror("登录失败", "未检测到人脸")
+        return
 
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = detector(gray)
-        if not faces:
-            messagebox.showerror("登录失败", "未检测到人脸")
-            return
+    shape = predictor(gray, faces[0])
+    face_descriptor = np.array(face_rec_model.compute_face_descriptor(frame, shape), dtype=np.float32)
 
-        shape = predictor(gray, faces[0])
-        face_descriptor = np.array(face_rec_model.compute_face_descriptor(frame, shape), dtype=np.float32)
+    current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        conn = sqlite3.connect('school_door_access_system.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, entry_time, exit_time, face_data FROM visitors WHERE approved=1")
+        visitors = cursor.fetchall()
+        conn.close()
 
-        try:
-            conn = sqlite3.connect('school_door_access_system.db')
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, entry_time, exit_time, face_data FROM visitors WHERE approved=1")
-            visitors = cursor.fetchall()
-            conn.close()
+        for visitor in visitors:
+            visitor_id, entry_time, exit_time, db_face_data = visitor
+            db_face_data = np.frombuffer(db_face_data, dtype=np.float32)
+            dist = np.linalg.norm(db_face_data - face_descriptor)
+            if dist < 0.5:
+                if entry_time <= current_time <= exit_time:
+                    messagebox.showinfo("登录成功", "访客登录成功!")
+                else:
+                    messagebox.showerror("登录失败", "当前时间不在允许的访问时间范围内")
+                return
 
-            for visitor in visitors:
-                visitor_id, entry_time, exit_time, db_face_data = visitor
-                db_face_data = np.frombuffer(db_face_data, dtype=np.float32)
-                dist = np.linalg.norm(db_face_data - face_descriptor)
-                if dist < 0.5:
-                    if entry_time <= current_time <= exit_time:
-                        messagebox.showinfo("登录成功", "访客登录成功!", parent=login_window)
-                    else:
-                        messagebox.showerror("登录失败", "当前时间不在允许的访问时间范围内", parent=login_window)
-                    return
-
-            messagebox.showerror("登录失败", "未匹配到访客信息", parent=login_window)
-        except sqlite3.OperationalError as e:
-            messagebox.showerror("登录失败", f"数据库被锁定：{e}", parent=login_window)
-
-    login_button = tk.Button(login_window, text="登录", command=check_login)
-    login_button.grid(row=1, column=1, padx=10, pady=10)
+        messagebox.showerror("登录失败", "未匹配到访客信息")
+    except sqlite3.OperationalError as e:
+        messagebox.showerror("登录失败", f"数据库被锁定：{e}")
 
 def auto_delete_expired_visitors():
     while True:

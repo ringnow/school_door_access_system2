@@ -67,8 +67,7 @@ def admin_login():
     管理员登录功能。首先通过用户名和密码验证管理员账户。
     对于非初始管理员，还需通过人脸识别进行验证。
     Returns:
-        username: 登录成功的用户名
-        is_initial: 是否为初始管理员
+        tuple: (username, is_initial) 登录成功的用户名和是否为初始管理员
     """
     print("管理员登录...")
     username = simpledialog.askstring("管理员登录", "请输入用户名")
@@ -250,6 +249,11 @@ def manage_students(root):
     refresh_students()
 
 
+from tkinter import Spinbox  # Ensure to import Spinbox at the beginning
+
+from tkinter import Spinbox  # Ensure to import Spinbox at the beginning
+from tkcalendar import DateEntry  # Ensure to import DateEntry at the beginning
+
 def manage_visitors(root):
     """
     管理访客信息的功能，包括添加、删除、修改和查找访客信息。
@@ -314,27 +318,37 @@ def manage_visitors(root):
         phone_entry = Entry(new_visitor_window)
         phone_entry.grid(row=2, column=1)
         # 入校和离校时间（日期与时间分开录入）
-        Label(new_visitor_window, text="入校日期 (YYYY-MM-DD)").grid(row=3, column=0)
-        entry_date_entry = Entry(new_visitor_window)
+        Label(new_visitor_window, text="入校日期").grid(row=3, column=0)
+        entry_date_entry = DateEntry(new_visitor_window, width=16, background='darkblue', foreground='white', borderwidth=2)
         entry_date_entry.grid(row=3, column=1)
-        Label(new_visitor_window, text="入校时间 (HH:MM:SS)").grid(row=4, column=0)
-        entry_time_entry = Entry(new_visitor_window)
-        entry_time_entry.grid(row=4, column=1)
-        Label(new_visitor_window, text="离校日期 (YYYY-MM-DD)").grid(row=5, column=0)
-        exit_date_entry = Entry(new_visitor_window)
+        Label(new_visitor_window, text="入校时间").grid(row=4, column=0)
+        entry_time_frame = Frame(new_visitor_window)
+        entry_time_frame.grid(row=4, column=1)
+        entry_hour_spinbox = Spinbox(entry_time_frame, from_=0, to=23, width=5, format="%02.0f")
+        entry_hour_spinbox.grid(row=0, column=0)
+        Label(entry_time_frame, text=":").grid(row=0, column=1)
+        entry_minute_spinbox = Spinbox(entry_time_frame, from_=0, to=59, width=5, format="%02.0f")
+        entry_minute_spinbox.grid(row=0, column=2)
+        Label(new_visitor_window, text="离校日期").grid(row=5, column=0)
+        exit_date_entry = DateEntry(new_visitor_window, width=16, background='darkblue', foreground='white', borderwidth=2)
         exit_date_entry.grid(row=5, column=1)
-        Label(new_visitor_window, text="离校时间 (HH:MM:SS)").grid(row=6, column=0)
-        exit_time_entry = Entry(new_visitor_window)
-        exit_time_entry.grid(row=6, column=1)
+        Label(new_visitor_window, text="离校时间").grid(row=6, column=0)
+        exit_time_frame = Frame(new_visitor_window)
+        exit_time_frame.grid(row=6, column=1)
+        exit_hour_spinbox = Spinbox(exit_time_frame, from_=0, to=23, width=5, format="%02.0f")
+        exit_hour_spinbox.grid(row=0, column=0)
+        Label(exit_time_frame, text=":").grid(row=0, column=1)
+        exit_minute_spinbox = Spinbox(exit_time_frame, from_=0, to=59, width=5, format="%02.0f")
+        exit_minute_spinbox.grid(row=0, column=2)
 
         def capture_face():
             name = username_entry.get()
             id_number = id_number_entry.get()
             phone = phone_entry.get()
-            entry_date = entry_date_entry.get()
-            entry_time_val = entry_time_entry.get()
-            exit_date = exit_date_entry.get()
-            exit_time_val = exit_time_entry.get()
+            entry_date = entry_date_entry.get_date().strftime("%Y-%m-%d")
+            entry_time_val = f"{entry_hour_spinbox.get()}:{entry_minute_spinbox.get()}:00"
+            exit_date = exit_date_entry.get_date().strftime("%Y-%m-%d")
+            exit_time_val = f"{exit_hour_spinbox.get()}:{exit_minute_spinbox.get()}:00"
             if name and id_number and phone and entry_date and entry_time_val and exit_date and exit_time_val:
                 entry_time_full = f"{entry_date} {entry_time_val}"
                 exit_time_full = f"{exit_date} {exit_time_val}"
@@ -361,18 +375,28 @@ def manage_visitors(root):
         new_phone_entry = Entry(update_window)
         new_phone_entry.grid(row=2, column=1)
         # 修改入校和离校时间
-        Label(update_window, text="新入校日期 (YYYY-MM-DD)").grid(row=3, column=0)
-        new_entry_date_entry = Entry(update_window)
+        Label(update_window, text="新入校日期").grid(row=3, column=0)
+        new_entry_date_entry = DateEntry(update_window, width=16, background='darkblue', foreground='white', borderwidth=2)
         new_entry_date_entry.grid(row=3, column=1)
-        Label(update_window, text="新入校时间 (HH:MM:SS)").grid(row=4, column=0)
-        new_entry_time_entry = Entry(update_window)
-        new_entry_time_entry.grid(row=4, column=1)
-        Label(update_window, text="新离校日期 (YYYY-MM-DD)").grid(row=5, column=0)
-        new_exit_date_entry = Entry(update_window)
+        Label(update_window, text="新入校时间").grid(row=4, column=0)
+        new_entry_time_frame = Frame(update_window)
+        new_entry_time_frame.grid(row=4, column=1)
+        new_entry_hour_spinbox = Spinbox(new_entry_time_frame, from_=0, to=23, width=5, format="%02.0f")
+        new_entry_hour_spinbox.grid(row=0, column=0)
+        Label(new_entry_time_frame, text=":").grid(row=0, column=1)
+        new_entry_minute_spinbox = Spinbox(new_entry_time_frame, from_=0, to=59, width=5, format="%02.0f")
+        new_entry_minute_spinbox.grid(row=0, column=2)
+        Label(update_window, text="新离校日期").grid(row=5, column=0)
+        new_exit_date_entry = DateEntry(update_window, width=16, background='darkblue', foreground='white', borderwidth=2)
         new_exit_date_entry.grid(row=5, column=1)
-        Label(update_window, text="新离校时间 (HH:MM:SS)").grid(row=6, column=0)
-        new_exit_time_entry = Entry(update_window)
-        new_exit_time_entry.grid(row=6, column=1)
+        Label(update_window, text="新离校时间").grid(row=6, column=0)
+        new_exit_time_frame = Frame(update_window)
+        new_exit_time_frame.grid(row=6, column=1)
+        new_exit_hour_spinbox = Spinbox(new_exit_time_frame, from_=0, to=23, width=5, format="%02.0f")
+        new_exit_hour_spinbox.grid(row=0, column=0)
+        Label(new_exit_time_frame, text=":").grid(row=0, column=1)
+        new_exit_minute_spinbox = Spinbox(new_exit_time_frame, from_=0, to=59, width=5, format="%02.0f")
+        new_exit_minute_spinbox.grid(row=0, column=2)
         # 新增批准状态修改选项
         Label(update_window, text="是否批准").grid(row=7, column=0)
         approved_var = tk.BooleanVar()
@@ -383,10 +407,10 @@ def manage_visitors(root):
             new_username = new_username_entry.get()
             new_id_number = new_id_number_entry.get()
             new_phone = new_phone_entry.get()
-            new_entry_date = new_entry_date_entry.get()
-            new_entry_time = new_entry_time_entry.get()
-            new_exit_date = new_exit_date_entry.get()
-            new_exit_time = new_exit_time_entry.get()
+            new_entry_date = new_entry_date_entry.get_date().strftime("%Y-%m-%d")
+            new_entry_time = f"{new_entry_hour_spinbox.get()}:{new_entry_minute_spinbox.get()}:00"
+            new_exit_date = new_exit_date_entry.get_date().strftime("%Y-%m-%d")
+            new_exit_time = f"{new_exit_hour_spinbox.get()}:{new_exit_minute_spinbox.get()}:00"
             if new_username and new_id_number and new_phone and new_entry_date and new_entry_time and new_exit_date and new_exit_time:
                 new_entry_time_full = f"{new_entry_date} {new_entry_time}"
                 new_exit_time_full = f"{new_exit_date} {new_exit_time}"
