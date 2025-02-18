@@ -14,7 +14,6 @@ face_rec_model = dlib.face_recognition_model_v1("dlib_face_recognition_resnet_mo
 # 定义人脸匹配阈值（阈值越低要求匹配越严格）
 FACE_MATCH_THRESHOLD = 0.5
 
-
 def open_camera():
     """
     打开摄像头，尝试使用不同的后端API
@@ -31,7 +30,6 @@ def open_camera():
         raise Exception("无法打开摄像头")
     return cap
 
-
 def close_camera(cap):
     """
     关闭摄像头
@@ -40,7 +38,6 @@ def close_camera(cap):
     """
     cap.release()
     cv2.destroyAllWindows()
-
 
 def process_frame(frame):
     """
@@ -55,7 +52,6 @@ def process_frame(frame):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = detector(gray)
     return frame, gray, faces
-
 
 def recognize_face_from_frame(frame, table):
     """
@@ -91,7 +87,6 @@ def recognize_face_from_frame(frame, table):
             return row[0]
     return None
 
-
 def is_face_registered(face_descriptor, table):
     """
     判断给定的人脸描述是否已在指定表中注册
@@ -116,6 +111,44 @@ def is_face_registered(face_descriptor, table):
             return True
     return False
 
+def capture_face_descriptor():
+    """
+    打开摄像头捕获访客人脸并返回人脸描述向量
+    Returns:
+        face_descriptor: 人脸描述向量，如果失败则返回 None
+    """
+    try:
+        cap = open_camera()
+    except Exception as e:
+        messagebox.showerror("错误", str(e))
+        return None
+
+    window_name = "录入人脸"
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    face_descriptor = None
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            messagebox.showerror("错误", "无法接收图像流")
+            break
+
+        frame, gray, faces = process_frame(frame)
+        # 如果检测到人脸，捕获人脸描述
+        if faces:
+            shape = predictor(gray, faces[0])
+            face_descriptor = np.array(face_rec_model.compute_face_descriptor(frame, shape), dtype=np.float32)
+            cv2.putText(frame, "人脸捕获成功", (10,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
+            cv2.imshow(window_name, frame)
+            # 等待1秒显示提示
+            cv2.waitKey(1000)
+            break
+
+        cv2.imshow(window_name, frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    close_camera(cap)
+    return face_descriptor
 
 def register_face(table, username, password="", id_number=None, phone=None, entry_time=None, exit_time=None):
     """
@@ -170,25 +203,22 @@ def register_face(table, username, password="", id_number=None, phone=None, entr
                     "INSERT INTO administrators (username, password, face_data) VALUES (?, ?, ?)",
                     (username, password, face_data.tobytes()))
             elif table == "visitors":
-                # 兼容数据库中不同的访客表结构
                 cursor.execute("PRAGMA table_info(visitors)")
                 columns_info = cursor.fetchall()
                 columns = [col[1] for col in columns_info]
-                # 如果存在 visit_time 列，使用该列插入数据
                 if "visit_time" in columns:
                     if not entry_time or not str(entry_time).strip():
                         entry_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     cursor.execute(
-                        "INSERT INTO visitors (username, face_data, id_number, phone, visit_time) VALUES (?, ?, ?, ?, ?)",
+                        "INSERT INTO visitors (username, face_data, id_number, phone, visit_time, approved) VALUES (?, ?, ?, ?, ?, 0)",
                         (username, face_data.tobytes(), id_number, phone, entry_time))
                 else:
-                    # 使用 entry_time 和 exit_time 列
                     if not entry_time or not str(entry_time).strip():
                         entry_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     if not exit_time or not str(exit_time).strip():
                         exit_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     cursor.execute(
-                        "INSERT INTO visitors (username, face_data, id_number, phone, entry_time, exit_time) VALUES (?, ?, ?, ?, ?, ?)",
+                        "INSERT INTO visitors (username, face_data, id_number, phone, entry_time, exit_time, approved) VALUES (?, ?, ?, ?, ?, ?, 0)",
                         (username, face_data.tobytes(), id_number, phone, entry_time, exit_time))
             else:
                 cursor.execute(f"INSERT INTO {table} (username, face_data) VALUES (?, ?)",
@@ -206,5 +236,3 @@ def register_face(table, username, password="", id_number=None, phone=None, entr
     if cv2.getWindowProperty(window_name, cv2.WND_PROP_VISIBLE) >= 1:
         cv2.destroyWindow(window_name)
     print("摄像头已关闭，窗口已销毁。")
-
-
