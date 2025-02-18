@@ -20,7 +20,7 @@ is_initial_admin = False
 
 # 按钮样式字典
 button_style = {
-    'bg': '#2980b9',
+    'bg': '#4CAF50',
     'fg': 'white',
     'font': ('Helvetica', 12, 'bold'),
     'width': 16,
@@ -28,6 +28,13 @@ button_style = {
     'relief': 'raised',
     'bd': 2
 }
+def center_window(window):
+    window.update_idletasks()
+    width = window.winfo_width()
+    height = window.winfo_height()
+    x = (window.winfo_screenwidth() // 2) - (width // 2)
+    y = (window.winfo_screenheight() // 2) - (height // 2)
+    window.geometry(f'{width}x{height}+{x}+{y}')
 
 def clear_frame(frame):
     """
@@ -100,7 +107,7 @@ def show_student_ui():
     face.grid(row=0, column=0, pady=20)
 
     # 行1：按钮区
-    btn_frame = tk.Frame(main_frame, bg='#2c3e50')
+    btn_frame = tk.Frame(main_frame, bg='#ecf0f1')
     btn_frame.grid(row=1, column=0, pady=10)
     btn_register = tk.Button(btn_frame, text="学生注册", command=on_student_register, **button_style)
     btn_register.grid(row=0, column=0, padx=20)
@@ -123,7 +130,7 @@ def show_visitor_ui():
     face = start_face_capture(main_frame)
     face.grid(row=0, column=0, pady=20)
 
-    btn_frame = tk.Frame(main_frame, bg='#2c3e50')
+    btn_frame = tk.Frame(main_frame, bg='#ecf0f1')
     btn_frame.grid(row=1, column=0, pady=10)
     btn_register = tk.Button(btn_frame, text="访客注册", command=lambda: register_visitor(root), **button_style)
     btn_register.grid(row=0, column=0, padx=20)
@@ -145,7 +152,7 @@ def show_admin_ui():
     face = start_face_capture(main_frame)
     face.grid(row=0, column=0, pady=20)
 
-    btn_frame = tk.Frame(main_frame, bg='#2c3e50')
+    btn_frame = tk.Frame(main_frame, bg='#ecf0f1')
     btn_frame.grid(row=1, column=0, pady=10)
     btn_admin_login = tk.Button(btn_frame, text="管理员登录", command=admin_login_handler, **button_style)
     btn_admin_login.grid(row=0, column=0, padx=20)
@@ -179,13 +186,13 @@ def show_admin_buttons_ui():
     face = start_face_capture(main_frame)
     face.grid(row=0, column=0, pady=20)
 
-    btn_frame = tk.Frame(main_frame, bg='#2c3e50')
+    btn_frame = tk.Frame(main_frame, bg='#ecf0f1')
     btn_frame.grid(row=1, column=0, pady=10)
     btn_manage_students = tk.Button(btn_frame, text="学生信息管理", command=on_manage_students, **button_style)
     btn_manage_students.grid(row=0, column=0, padx=10, pady=10)
     btn_manage_visitors = tk.Button(btn_frame, text="访客信息管理", command=on_manage_visitors, **button_style)
     btn_manage_visitors.grid(row=0, column=1, padx=10, pady=10)
-    btn_admin_register = tk.Button(btn_frame, text="管理员注册", command=on_admin_register, **button_style)
+    btn_admin_register = tk.Button(btn_frame, text="管理员注册", command=admin_register, **button_style)
     btn_admin_register.grid(row=0, column=2, padx=10, pady=10)
     btn_logout = tk.Button(btn_frame, text="退出登录", command=on_logout_handler, **button_style)
     btn_logout.grid(row=0, column=3, padx=10, pady=10)
@@ -253,12 +260,15 @@ def on_manage_admins():
 root = tk.Tk()
 root.title("学校门禁系统")
 root.geometry("800x600")
-root.configure(bg='#2c3e50')
+root.configure(bg='#ecf0f1')
 root.grid_rowconfigure(0, weight=1)
 root.grid_columnconfigure(0, weight=1)
 
-main_frame = tk.Frame(root, bg='#2c3e50')
+main_frame = tk.Frame(root, bg='#ecf0f1')
 main_frame.grid(row=0, column=0, sticky="nsew")
+
+# 居中主窗口
+center_window(root)
 
 # 显示主菜单
 show_main_menu()
