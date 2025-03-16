@@ -156,9 +156,8 @@ def register_face(table, username, password="", id_number=None, phone=None, entr
     - 对于管理员，调用时传入参数: register_face("administrators", username, password)
       插入数据时使用 (username, password, face_data)
     - 对于访客，调用时传入参数: register_face("visitors", username, id_number, phone, entry_time, exit_time)
-      插入数据时使用:
-          如果 visitors 表存在 visit_time 列，则插入 (username, face_data, id_number, phone, visit_time)
-          否则插入 (username, face_data, id_number, phone, entry_time, exit_time)
+      为确保访客信息完整，保存时统一插入 entry_time、exit_time 和 visit_time 三个字段，
+      其中 visit_time 记录注册时刻。
     - 对于其他表，调用时传入: register_face(table, username)
       插入数据时使用 (username, face_data)
     Args:
@@ -203,23 +202,16 @@ def register_face(table, username, password="", id_number=None, phone=None, entr
                     "INSERT INTO administrators (username, password, face_data) VALUES (?, ?, ?)",
                     (username, password, face_data.tobytes()))
             elif table == "visitors":
-                cursor.execute("PRAGMA table_info(visitors)")
-                columns_info = cursor.fetchall()
-                columns = [col[1] for col in columns_info]
-                if "visit_time" in columns:
-                    if not entry_time or not str(entry_time).strip():
-                        entry_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    cursor.execute(
-                        "INSERT INTO visitors (username, face_data, id_number, phone, visit_time, approved) VALUES (?, ?, ?, ?, ?, 0)",
-                        (username, face_data.tobytes(), id_number, phone, entry_time))
-                else:
-                    if not entry_time or not str(entry_time).strip():
-                        entry_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    if not exit_time or not str(exit_time).strip():
-                        exit_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    cursor.execute(
-                        "INSERT INTO visitors (username, face_data, id_number, phone, entry_time, exit_time, approved) VALUES (?, ?, ?, ?, ?, ?, 0)",
-                        (username, face_data.tobytes(), id_number, phone, entry_time, exit_time))
+                # 如果未传入有效的入校或离校时间，则使用当前时间补齐
+                if not entry_time or not str(entry_time).strip():
+                    entry_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                if not exit_time or not str(exit_time).strip():
+                    exit_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                # visit_time 固定记录当前注册时刻
+                visit_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                cursor.execute(
+                    "INSERT INTO visitors (username, face_data, id_number, phone, entry_time, exit_time, visit_time, approved) VALUES (?, ?, ?, ?, ?, ?, ?, 0)",
+                    (username, face_data.tobytes(), id_number, phone, entry_time, exit_time, visit_time))
             else:
                 cursor.execute(f"INSERT INTO {table} (username, face_data) VALUES (?, ?)",
                                (username, face_data.tobytes()))
